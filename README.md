@@ -1,4 +1,4 @@
-A library for building/maintaining custom lobbies for NovaLogic's Black Hawk Down. 
+A PHP library for building/maintaining custom lobbies for NovaLogic's Black Hawk Down. 
 
 Retrieves BHD server list from the official Novaworld GLB file. 
 
