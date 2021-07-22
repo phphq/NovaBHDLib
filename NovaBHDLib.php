@@ -42,12 +42,78 @@ declare(strict_types = 1);
 :- Version 1.0.0
 :-		1) Initial Release
 :-
+:- Version 1.0.1
+:-		1) Few minor fixes
+:-
 */
 
 //======================================================================
 // USAGE EXAMPLES
 //======================================================================
 $Nova = new Nova();
+
+//----------------------------------------------------------------------
+// Logs into Novaworld with your credentials to retrieve the GLB file
+// and server info using the RID from the server list above.
+// This is the only way to get the servers port and ck
+//----------------------------------------------------------------------
+$nw_login = $Nova->nwLogin('YOUR_NW_USERNAME', 'YOUR_NW_PASSWORD');
+
+//----------------------------------------------------------------------
+// Decrypts & Decodes the Novaworld 
+// BHD GLB File to get current Novaworld Server List
+// http://nw10.novaworld.net/bhd_6.glb?a=1
+//----------------------------------------------------------------------
+$glb = $Nova->glbOpen('http://nw10.novaworld.net/bhd_6.glb?a=1');
+
+// Decrypt the GLB
+$decrypted = $Nova->glbDecrypt($glb);
+
+// Decrypt the GLB
+$decoded = $Nova->glbDecode($decrypted);
+
+// debug: print_r($Nova->glbErrors());
+
+// Get the server list
+$server_list = $Nova->glbServerList();
+
+//----------------------------------------------------------------------
+// Loops through the glb server list, adds the port to the array
+//----------------------------------------------------------------------
+foreach($server_list AS $rid => $server_details) {
+
+	// Extracts data from the servers join page
+	$join_data = $Nova->nwServerExtract($rid);
+
+	// Updates the server list to include the port and other info
+	if(!$Nova->glbUpdateServer($rid, $join_data))
+		echo "Could not update server with RID: ".$rid."\n";
+
+}
+
+//----------------------------------------------------------------------
+// Prints the server list array
+//----------------------------------------------------------------------
+echo "<h1>Server List Array (Excludes Port)</h1>\n";
+print_r($server_list);
+echo "\n";
+echo "\n";
+
+//----------------------------------------------------------------------
+// Prints nice JSON output that includes server port (Use after running login)
+//----------------------------------------------------------------------
+echo "<h1>JSON Server List</h1>\n";
+echo $Nova->printJsonServerList(true);
+echo "\n";
+echo "\n";
+
+//----------------------------------------------------------------------
+// Verbose lobby login debugging
+//----------------------------------------------------------------------
+echo "<h1>Verbose cURL Debug</h1>\n";
+echo "\n";
+echo "\n";
+print_r($Nova->lobbyVerbose());
 
 //----------------------------------------------------------------------
 // Ping a BHD server and get the current status and details
@@ -62,67 +128,13 @@ echo "\n";
 echo "\n";
 
 //----------------------------------------------------------------------
-// Decrypts & Decodes the Novaworld 
-// BHD GLB File to get current NW Server List
-// http://207.178.209.204/bhd_6.glb?a=1
-// 
-//----------------------------------------------------------------------
-$glb = $Nova->glbOpen('http://207.178.209.204/bhd_6.glb?a=1');
-
-$decrypted = $Nova->glbDecrypt($glb);
-
-$decoded = $Nova->glbDecode($decrypted);
-
-$server_list = $Nova->glbServerList();
-
-// Prints the server list (WITHOUT PORT, needs login below to retrieve port)
-echo "<h1>Server List Array (Excludes Port)</h1>\n";
-print_r($server_list);
-echo "\n";
-echo "\n";
-
-// debug: print_r($Nova->glbErrors());
-
-//----------------------------------------------------------------------
-// Logs into Novaworld with your credentials to retrieve
-// The NovaKey from the Server Page using the RID from the
-// server list above. This is the only way to get the servers port
-//----------------------------------------------------------------------
-$nw_login = $Nova->nwLogin('YOUR_NW_USERNAME', 'YOUR_NW_PASSWORD');
-
-// Loops through the glb server list from above, ads the port to the array
-foreach($server_list AS $rid => $server_details) {
-
-	$join_data = $Nova->nwServerExtract($rid);
-
-	// Updates the server list to include the port and other info
-	if(!$Nova->glbUpdateServer($rid, $join_data))
-		echo "Could not update server with RID: ".$rid."\n";
-
-}
-
-//----------------------------------------------------------------------
-// Verbose lobby login debugging
-//----------------------------------------------------------------------
-echo "<h1>Verbose cURL Debug</h1>\n";
-echo "\n";
-echo "\n";
-print_r($Nova->lobbyVerbose());
-
-//----------------------------------------------------------------------
-// Prints nice JSON output that includes server port (Use after running login)
-//----------------------------------------------------------------------
-echo "<h1>JSON Server List</h1>\n";
-echo $Nova->printJsonServerList(true);
-echo "\n";
-echo "\n";
-//----------------------------------------------------------------------
 // Converts IP:Port to encrypted NovaKey
 //----------------------------------------------------------------------
 echo "<h1>NovaKey from 207.178.209.215:17479</h1>\n";
 echo $Nova::string2nk('207.178.209.215:17479');
 echo "\n";
 echo "\n";
+
 //----------------------------------------------------------------------
 // Converts NovaKey to IP:Port
 //----------------------------------------------------------------------
@@ -515,6 +527,8 @@ class Nova {
 		} else {
 
 			$this->glb_errors[] = 'openGLB -> Could not open uri: '.$uri;
+			$this->glb_errors[] = 'You may need to login with nwLogin first';
+			$this->glb_errors[] = $http_response_header;
 
 		}
 
