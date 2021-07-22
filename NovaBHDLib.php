@@ -52,6 +52,7 @@ declare(strict_types = 1);
 //======================================================================
 $Nova = new Nova();
 
+echo "<html><head><title>NOVA BHD Library</title></head><body><pre>";
 //----------------------------------------------------------------------
 // Logs into Novaworld with your credentials to retrieve the GLB file
 // and server info using the RID from the server list above.
@@ -119,8 +120,6 @@ print_r($Nova->lobbyVerbose());
 // Ping a BHD server and get the current status and details
 //----------------------------------------------------------------------
 $ping = $Nova::nwServerPing('207.178.209.215', 17479);
-
-echo "<html><head><title>NOVA BHD Library</title></head><body><pre>";
 
 echo "<h1>NovaPing result from 207.178.209.215:17479</h1>\n";
 print_r($ping);
